@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:geocoding/geocoding.dart';
@@ -6,18 +7,22 @@ class LocationProvider with ChangeNotifier {
   Position? _currentPosition;
   String? _currentAddress;
   bool _isLoading = false;
+  String? _error;
 
   Position? get currentPosition => _currentPosition;
   String? get currentAddress => _currentAddress;
   bool get isLoading => _isLoading;
+  String? get error => _error;
 
   Future<void> getCurrentLocation() async {
     _isLoading = true;
+    _error = null;
     notifyListeners();
 
     try {
       bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
       if (!serviceEnabled) {
+        _error = 'Location services are disabled.';
         _isLoading = false;
         notifyListeners();
         return;
@@ -27,6 +32,7 @@ class LocationProvider with ChangeNotifier {
       if (permission == LocationPermission.denied) {
         permission = await Geolocator.requestPermission();
         if (permission == LocationPermission.denied) {
+          _error = 'Location permission denied.';
           _isLoading = false;
           notifyListeners();
           return;
@@ -34,6 +40,7 @@ class LocationProvider with ChangeNotifier {
       }
 
       if (permission == LocationPermission.deniedForever) {
+        _error = 'Location permission permanently denied. Enable it in Settings.';
         _isLoading = false;
         notifyListeners();
         return;
@@ -45,7 +52,8 @@ class LocationProvider with ChangeNotifier {
 
       await _getAddressFromCoordinates();
     } catch (e) {
-      print('Error getting location: $e');
+      _error = 'Failed to get location: $e';
+      debugPrint('LocationProvider.getCurrentLocation error: $e');
     }
 
     _isLoading = false;
@@ -62,12 +70,17 @@ class LocationProvider with ChangeNotifier {
       );
 
       if (placemarks.isNotEmpty) {
-        Placemark place = placemarks[0];
+        final place = placemarks[0];
         _currentAddress = '${place.street}, ${place.locality}';
       }
     } catch (e) {
-      print('Error getting address: $e');
+      debugPrint('LocationProvider._getAddressFromCoordinates error: $e');
       _currentAddress = 'Unknown location';
     }
+  }
+
+  void clearError() {
+    _error = null;
+    notifyListeners();
   }
 }

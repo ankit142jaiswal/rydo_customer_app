@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import '../services/api_service.dart';
 
 class RideProvider with ChangeNotifier {
@@ -42,7 +43,7 @@ class RideProvider with ChangeNotifier {
         _rideHistory = List<Map<String, dynamic>>.from(result['rides']);
       }
     } catch (e) {
-      print('Error fetching ride history: $e');
+      debugPrint('Error fetching ride history: $e');
     }
 
     _isLoading = false;

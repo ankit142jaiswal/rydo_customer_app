@@ -14,7 +14,7 @@ import 'razorpay_mobile.dart'
 /// 2. openCheckout(...) opens the Razorpay UI and returns payment id/order id/signature
 /// 3. Backend verifies the signature (verify-payment / verify-wallet-payment)
 class RazorpayCheckout {
-  static const _themeColor = '#1976d2';
+  static const _themeColor = '#FFC107';
 
   static Future<Map<String, String>> _headers() async {
     final token = await StorageHelper.getToken();

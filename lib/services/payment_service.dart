@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:razorpay_flutter/razorpay_flutter.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
@@ -49,7 +50,7 @@ class PaymentService {
       }
       return null;
     } catch (e) {
-      print('Error creating payment order: $e');
+      debugPrint('Error creating payment order: $e');
       return null;
     }
   }
@@ -79,7 +80,7 @@ class PaymentService {
       }
       return null;
     } catch (e) {
-      print('Error creating wallet recharge order: $e');
+      debugPrint('Error creating wallet recharge order: $e');
       return null;
     }
   }
@@ -105,14 +106,14 @@ class PaymentService {
         'name': customerName,
       },
       'theme': {
-        'color': '#1976d2',
+        'color': '#FFC107',
       }
     };
 
     try {
       _razorpay.open(options);
     } catch (e) {
-      print('Error opening Razorpay: $e');
+      debugPrint('Error opening Razorpay: $e');
     }
   }
 
@@ -145,7 +146,7 @@ class PaymentService {
       }
       return false;
     } catch (e) {
-      print('Error verifying payment: $e');
+      debugPrint('Error verifying payment: $e');
       return false;
     }
   }
@@ -185,7 +186,7 @@ class PaymentService {
       }
       return null;
     } catch (e) {
-      print('Error verifying wallet payment: $e');
+      debugPrint('Error verifying wallet payment: $e');
       return null;
     }
   }
@@ -222,7 +223,7 @@ class PaymentService {
       }
       return null;
     } catch (e) {
-      print('Error paying from wallet: $e');
+      debugPrint('Error paying from wallet: $e');
       return null;
     }
   }
@@ -246,7 +247,7 @@ class PaymentService {
       }
       return 0.0;
     } catch (e) {
-      print('Error getting wallet balance: $e');
+      debugPrint('Error getting wallet balance: $e');
       return 0.0;
     }
   }
@@ -270,23 +271,23 @@ class PaymentService {
       }
       return [];
     } catch (e) {
-      print('Error getting payment history: $e');
+      debugPrint('Error getting payment history: $e');
       return [];
     }
   }
 
   void _handlePaymentSuccess(PaymentSuccessResponse response) {
     // This will be handled by the calling widget
-    print('Payment Success: ${response.paymentId}');
+      debugPrint('Payment Success: ${response.paymentId}');
   }
 
   void _handlePaymentError(PaymentFailureResponse response) {
     // This will be handled by the calling widget
-    print('Payment Error: ${response.code} - ${response.message}');
+      debugPrint('Payment Error: ${response.code} - ${response.message}');
   }
 
   void _handleExternalWallet(ExternalWalletResponse response) {
     // Handle external wallet
-    print('External Wallet: ${response.walletName}');
+      debugPrint('External Wallet: ${response.walletName}');
   }
 }
