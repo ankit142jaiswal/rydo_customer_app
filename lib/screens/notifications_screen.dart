@@ -39,30 +39,15 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
         foregroundColor: Colors.white,
         elevation: 0,
         scrolledUnderElevation: 0,
+        automaticallyImplyLeading: false,
         leading: Padding(
           padding: const EdgeInsets.all(8),
-          child: Container(
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: const Padding(
-              padding: EdgeInsets.all(10),
-              child: Image(
-                image: AssetImage('assets/images/rydo_logo.png'),
-                fit: BoxFit.contain,
-              ),
-            ),
+          child: Image.asset(
+            'assets/images/rydo_logo.png',
+            fit: BoxFit.contain,
           ),
         ),
-        title: const Text(
-          'Notifications',
-          style: TextStyle(
-            color: Colors.white,
-            fontWeight: FontWeight.w700,
-            fontSize: 20,
-          ),
-        ),
+        title: null,
         actions: [
           IconButton(
             icon: const Icon(Icons.done_all, color: Colors.white),

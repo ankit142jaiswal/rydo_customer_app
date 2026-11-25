@@ -55,30 +55,15 @@ class _RidesScreenState extends State<RidesScreen> {
       foregroundColor: Colors.white,
       elevation: 0,
       scrolledUnderElevation: 0,
+      automaticallyImplyLeading: false,
       leading: Padding(
         padding: const EdgeInsets.all(8),
-        child: Container(
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(10),
-          ),
-          child: const Padding(
-            padding: EdgeInsets.all(10),
-            child: Image(
-              image: AssetImage('assets/images/rydo_logo.png'),
-              fit: BoxFit.contain,
-            ),
-          ),
+        child: Image.asset(
+          'assets/images/rydo_logo.png',
+          fit: BoxFit.contain,
         ),
       ),
-      title: const Text(
-        'My Rides',
-        style: TextStyle(
-          color: Colors.white,
-          fontWeight: FontWeight.w700,
-          fontSize: 20,
-        ),
-      ),
+      title: null,
     );
   }
 

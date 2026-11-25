@@ -170,41 +170,28 @@ class _HomeScreenState extends State<HomeScreen> {
       // ── Side navigation drawer ─────────────────────────────────────────
       drawer: _buildDrawer(context),
       appBar: AppBar(
-        // Dark charcoal AppBar — hamburger auto-inserted by Scaffold when
-        // drawer is set; we override it with the logo instead.
         backgroundColor: AppColors.dark,
         elevation: 0,
         scrolledUnderElevation: 0,
+        // Logo fills the full leading area and opens the drawer on tap
+        automaticallyImplyLeading: false,
         leading: Builder(
           builder: (ctx) => InkWell(
-            borderRadius: BorderRadius.circular(10),
             onTap: () => Scaffold.of(ctx).openDrawer(),
             child: Padding(
               padding: const EdgeInsets.all(8),
-              child: Container(
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: const Padding(
-                  padding: EdgeInsets.all(10),
-                  child: Image(
-                    image: AssetImage('assets/images/rydo_logo.png'),
-                    fit: BoxFit.contain,
-                  ),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(10),
+                child: Image.asset(
+                  'assets/images/rydo_icon.png',
+                  fit: BoxFit.cover,
                 ),
               ),
             ),
           ),
         ),
-        title: Text(
-          _currentIndex == 0 ? 'Rydo' : tabTitles[_currentIndex],
-          style: const TextStyle(
-            color: Colors.white,
-            fontWeight: FontWeight.w700,
-            fontSize: 20,
-          ),
-        ),
+        // No title — logo IS the brand identity + menu trigger
+        title: null,
         actions: [
           Consumer<NotificationProvider>(
             builder: (context, notifProvider, _) {
