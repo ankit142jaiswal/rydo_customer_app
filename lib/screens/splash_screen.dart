@@ -120,10 +120,7 @@ class _SplashScreenState extends State<SplashScreen>
                         ),
                         child: Padding(
                           padding: const EdgeInsets.all(10),
-                          child: Image.asset(
-                            'assets/images/rydo_logo.png',
-                            fit: BoxFit.contain,
-                          ),
+                          child: ClipRRect(borderRadius: BorderRadius.circular(10), child: Image.asset('assets/images/rydo_icon.png', fit: BoxFit.cover)),
                         ),
                       ),
                     ),

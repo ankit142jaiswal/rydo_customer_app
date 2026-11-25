@@ -42,10 +42,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
         automaticallyImplyLeading: false,
         leading: Padding(
           padding: const EdgeInsets.all(8),
-          child: Image.asset(
-            'assets/images/rydo_logo.png',
-            fit: BoxFit.contain,
-          ),
+          child: ClipRRect(borderRadius: BorderRadius.circular(10), child: Image.asset('assets/images/rydo_icon.png', fit: BoxFit.cover)),
         ),
         title: null,
         actions: [

@@ -120,11 +120,14 @@ class _WalletScreenState extends State<WalletScreen> {
             color: Colors.white,
             borderRadius: BorderRadius.circular(10),
           ),
-          child: const Padding(
-            padding: EdgeInsets.all(10),
-            child: Image(
-              image: AssetImage('assets/images/rydo_logo.png'),
-              fit: BoxFit.contain,
+          child: Padding(
+            padding: const EdgeInsets.all(10),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(10),
+              child: Image.asset(
+                'assets/images/rydo_icon.png',
+                fit: BoxFit.cover,
+              ),
             ),
           ),
         ),
