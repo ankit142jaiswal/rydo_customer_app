@@ -117,6 +117,22 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   void _openBookRide([String? serviceType]) {
+    // One ride at a time: send the user to their current ride instead
+    final active = _dashboard?['activeRide'];
+    if (active is Map && active['rideId'] != null) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+        content: Text('You already have a ride in progress. Finish or cancel it to book another.'),
+        behavior: SnackBarBehavior.floating,
+      ));
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) => RideTrackingScreen(
+              rideId: active['rideId'].toString(), initialRide: Map<String, dynamic>.from(active)),
+        ),
+      ).then((_) => _loadDashboard(silent: true));
+      return;
+    }
     Navigator.push(
       context,
       MaterialPageRoute(

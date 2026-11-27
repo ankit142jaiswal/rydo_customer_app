@@ -27,6 +27,9 @@ class _BookRideScreenState extends State<BookRideScreen> {
   String _serviceType = 'bike-taxi';
   String _paymentMethod = 'cash';
 
+  /// Ride the customer already has in progress; while set, booking is blocked.
+  Map<String, dynamic>? _activeRide;
+
   // Return ride: captain waits at the destination, then brings the customer back.
   // Waiting is 1–20 minutes at ₹1/min (fare is calculated by the server).
   static const _minWait = 1, _maxWait = 20, _waitRatePerMin = 1;
@@ -148,6 +151,7 @@ class _BookRideScreenState extends State<BookRideScreen> {
       _serviceType = widget.initialServiceType!;
     }
     _useCurrentLocation();
+    _checkActiveRide();
   }
 
   Future<void> _useCurrentLocation() async {
@@ -250,6 +254,7 @@ class _BookRideScreenState extends State<BookRideScreen> {
   }
 
   Future<void> _getEstimate() async {
+    if (_activeRide != null) return; // one ride at a time
     if (_pickupController.text.isEmpty || _destController.text.isEmpty) {
       setState(() => _message = 'Enter both pickup and destination');
       return;
@@ -336,9 +341,81 @@ class _BookRideScreenState extends State<BookRideScreen> {
           ),
         ),
       );
+    } else if (result['code'] == 'ACTIVE_RIDE_EXISTS' && result['activeRide'] is Map) {
+      // Server refused: the customer already has a ride in progress
+      setState(() => _activeRide = Map<String, dynamic>.from(result['activeRide']));
     } else {
       setState(() => _message = result['message'] ?? 'Booking failed');
     }
+  }
+
+  /// Checks whether the customer already has a ride in progress (one ride at a time).
+  Future<void> _checkActiveRide() async {
+    final res = await ApiService.getDashboard();
+    if (!mounted) return;
+    final active = res['dashboard']?['activeRide'];
+    setState(() => _activeRide = active is Map ? Map<String, dynamic>.from(active) : null);
+  }
+
+  void _openActiveRide() {
+    final ride = _activeRide;
+    if (ride == null) return;
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(builder: (_) => RideTrackingScreen(rideId: ride['rideId'].toString(), initialRide: ride)),
+    );
+  }
+
+  Widget _activeRideCard() {
+    const labels = {
+      'requested': 'Finding your captain',
+      'accepted': 'Captain is on the way',
+      'arrived': 'Captain has arrived',
+      'started': 'Trip in progress',
+    };
+    final status = _activeRide?['status']?.toString() ?? 'requested';
+    return Container(
+      padding: const EdgeInsets.all(14),
+      margin: const EdgeInsets.only(bottom: 14),
+      decoration: BoxDecoration(
+        color: AppColors.primary.withValues(alpha: 0.15),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppColors.primary),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Row(children: [
+            Icon(Icons.info_rounded, color: AppColors.dark),
+            SizedBox(width: 8),
+            Expanded(
+              child: Text('You already have a ride in progress',
+                  style: TextStyle(fontSize: 15, fontWeight: FontWeight.w800)),
+            ),
+          ]),
+          const SizedBox(height: 6),
+          Text(
+            '${labels[status] ?? 'Ride in progress'}. You can book a new ride after this one is completed or cancelled.',
+            style: const TextStyle(fontSize: 13, color: AppColors.onSurfaceVariant),
+          ),
+          const SizedBox(height: 12),
+          SizedBox(
+            width: double.infinity,
+            height: 46,
+            child: ElevatedButton.icon(
+              onPressed: _openActiveRide,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.dark,
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+              ),
+              icon: const Icon(Icons.my_location_rounded),
+              label: const Text('Track current ride'),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   BoxDecoration get _cardDecoration => BoxDecoration(
@@ -451,6 +528,7 @@ class _BookRideScreenState extends State<BookRideScreen> {
                           Expanded(child: Text(_message!, style: const TextStyle(color: AppColors.error))),
                         ]),
                       ),
+                    if (_activeRide != null) _activeRideCard(),
                     _locationCard(),
                     _suggestionList(),
                     const SizedBox(height: 18),
@@ -485,7 +563,7 @@ class _BookRideScreenState extends State<BookRideScreen> {
                       SizedBox(
                         height: 54,
                         child: ElevatedButton.icon(
-                          onPressed: _loadingEstimate ? null : _getEstimate,
+                          onPressed: (_loadingEstimate || _activeRide != null) ? null : _getEstimate,
                           style: ElevatedButton.styleFrom(
                             backgroundColor: AppColors.dark,
                             foregroundColor: Colors.white,
