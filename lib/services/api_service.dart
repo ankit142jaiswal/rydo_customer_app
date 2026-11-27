@@ -5,7 +5,7 @@ import '../config/api_config.dart';
 
 class ApiService {
   // Platform-aware base URL (localhost on web, 10.0.2.2 on Android emulator).
-  // This ensures all platforms connect to the SAME backend that rydo_web uses.
+  // This ensures all platforms connect to the SAME backend that Rydo_web uses.
   static String get baseUrl => ApiConfig.baseUrl;
   
   static Future<String?> getToken() async {

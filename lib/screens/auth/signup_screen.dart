@@ -1,3 +1,4 @@
+import '../../widgets/rydo_back_button.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../providers/auth_provider.dart';
@@ -63,30 +64,26 @@ class _SignupScreenState extends State<SignupScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: Container(
-        decoration: const BoxDecoration(gradient: AppColors.primaryGradient),
+        // Same dark background as the login screen
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            colors: [Color(0xFF1A1A2E), Color(0xFF16213E)],
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+          ),
+        ),
         child: SafeArea(
-          child: SingleChildScrollView(
+          child: Stack(
+            children: [
+          SingleChildScrollView(
             padding: const EdgeInsets.all(24),
             child: Column(
               children: [
                 const SizedBox(height: 40),
-                Container(
-                  width: 80,
-                  height: 80,
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: const Center(
-                    child: Text(
-                      'R',
-                      style: TextStyle(
-                        fontSize: 32,
-                        fontWeight: FontWeight.bold,
-                        color: AppColors.primary,
-                      ),
-                    ),
-                  ),
+                // App icon only
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(22),
+                  child: Image.asset('assets/images/rydo_icon.png', width: 100, height: 100, fit: BoxFit.cover),
                 ),
                 const SizedBox(height: 20),
                 const Text(
@@ -205,6 +202,9 @@ class _SignupScreenState extends State<SignupScreen> {
                 ),
               ],
             ),
+          ),
+              const Positioned(top: 4, left: 4, child: RydoBackButton(color: AppColors.dark, filled: true)),
+              ],
           ),
         ),
       ),

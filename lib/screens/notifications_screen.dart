@@ -40,11 +40,13 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
         elevation: 0,
         scrolledUnderElevation: 0,
         automaticallyImplyLeading: false,
-        leading: Padding(
-          padding: const EdgeInsets.all(8),
-          child: ClipRRect(borderRadius: BorderRadius.circular(10), child: Image.asset('assets/images/rydo_icon.png', fit: BoxFit.cover)),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_rounded, color: Colors.white),
+          tooltip: 'Back',
+          onPressed: () => Navigator.maybePop(context),
         ),
-        title: null,
+        title: const Text('Notifications',
+            style: TextStyle(fontWeight: FontWeight.w700, color: Colors.white)),
         actions: [
           IconButton(
             icon: const Icon(Icons.done_all, color: Colors.white),

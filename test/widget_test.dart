@@ -1,4 +1,4 @@
-// Basic Flutter widget smoke test for the RYDO customer app.
+// Basic Flutter widget smoke test for the Rydo app.
 
 import 'package:flutter_test/flutter_test.dart';
 
@@ -9,7 +9,7 @@ void main() {
     // Build the app and trigger a frame.
     await tester.pumpWidget(const RydoApp());
 
-    // The splash screen shows the app name "RYDO".
-    expect(find.text('RYDO'), findsOneWidget);
+    // The splash screen shows the app name "Rydo".
+    expect(find.text('Rydo'), findsOneWidget);
   });
 }

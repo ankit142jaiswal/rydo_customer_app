@@ -56,6 +56,8 @@ class SocketService extends ChangeNotifier {
       'ride_started',
       'ride_completed',
       'ride_cancelled',
+      'ride_status_update',
+      'driver_location',
       'driver_location_update',
     ]) {
       _socket!.on(event, (data) {

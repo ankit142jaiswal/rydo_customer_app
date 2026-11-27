@@ -1,5 +1,6 @@
 // Mobile (Android/iOS) implementation of Razorpay checkout using razorpay_flutter.
 import 'dart:async';
+import 'package:flutter/foundation.dart';
 import 'package:razorpay_flutter/razorpay_flutter.dart';
 
 class CheckoutResult {
@@ -36,6 +37,16 @@ Future<CheckoutResult> openCheckout({
       paymentId: 'pay_test_${DateTime.now().millisecondsSinceEpoch}',
       orderId: orderId,
       signature: 'test_signature',
+    );
+  }
+
+  // razorpay_flutter only supports Android and iOS. On Windows/macOS/Linux its
+  // open() fails silently in the background and the payment would hang forever.
+  if (defaultTargetPlatform != TargetPlatform.android && defaultTargetPlatform != TargetPlatform.iOS) {
+    return CheckoutResult(
+      success: false,
+      error: 'Razorpay payments work only on Android, iOS or web. '
+          'Run the app on a phone/emulator (or Chrome) to recharge.',
     );
   }
 

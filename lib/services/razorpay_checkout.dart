@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import '../config/api_config.dart';
@@ -24,6 +25,25 @@ class RazorpayCheckout {
     };
   }
 
+  /// POSTs JSON and always returns a map with `success` and `message`, even when
+  /// the server is down, times out, or replies with non-JSON (e.g. Render waking up).
+  static Future<Map<String, dynamic>> _post(String path, Map<String, dynamic> body) async {
+    try {
+      final res = await http
+          .post(Uri.parse('${ApiConfig.baseUrl}$path'), headers: await _headers(), body: jsonEncode(body))
+          .timeout(const Duration(seconds: 60));
+      try {
+        final data = jsonDecode(res.body);
+        if (data is Map<String, dynamic>) return data;
+      } catch (_) {}
+      return {'success': false, 'message': 'Server error (${res.statusCode}). Please try again in a moment.'};
+    } on TimeoutException {
+      return {'success': false, 'message': 'Server is taking too long to respond. Please try again.'};
+    } catch (e) {
+      return {'success': false, 'message': 'Network error: $e'};
+    }
+  }
+
   /// Pay for a ride online via Razorpay. Returns {success, message}.
   static Future<Map<String, dynamic>> payForRide({
     required String rideId,
@@ -33,12 +53,7 @@ class RazorpayCheckout {
     required String customerPhone,
   }) async {
     // 1. Create order
-    final orderRes = await http.post(
-      Uri.parse('${ApiConfig.baseUrl}/payments/create-order'),
-      headers: await _headers(),
-      body: jsonEncode({'rideId': rideId, 'amount': amount}),
-    );
-    final orderData = jsonDecode(orderRes.body);
+    final orderData = await _post('/payments/create-order', {'rideId': rideId, 'amount': amount});
     if (orderData['success'] != true) {
       return {'success': false, 'message': orderData['message'] ?? 'Failed to create order'};
     }
@@ -47,7 +62,7 @@ class RazorpayCheckout {
     // 2. Open checkout
     final result = await openCheckout(
       order: order,
-      name: 'RYDO',
+      name: 'Rydo',
       description: 'Ride payment',
       customerName: customerName,
       customerEmail: customerEmail,
@@ -59,17 +74,12 @@ class RazorpayCheckout {
     }
 
     // 3. Verify
-    final verifyRes = await http.post(
-      Uri.parse('${ApiConfig.baseUrl}/payments/verify-payment'),
-      headers: await _headers(),
-      body: jsonEncode({
-        'razorpay_payment_id': result.paymentId,
-        'razorpay_order_id': result.orderId,
-        'razorpay_signature': result.signature,
-        'rideId': rideId,
-      }),
-    );
-    final verifyData = jsonDecode(verifyRes.body);
+    final verifyData = await _post('/payments/verify-payment', {
+      'razorpay_payment_id': result.paymentId,
+      'razorpay_order_id': result.orderId,
+      'razorpay_signature': result.signature,
+      'rideId': rideId,
+    });
     return {
       'success': verifyData['success'] == true,
       'message': verifyData['message'] ?? (verifyData['success'] == true ? 'Payment successful' : 'Verification failed'),
@@ -85,12 +95,7 @@ class RazorpayCheckout {
     required String customerPhone,
   }) async {
     // 1. Create wallet order
-    final orderRes = await http.post(
-      Uri.parse('${ApiConfig.baseUrl}/payments/add-to-wallet'),
-      headers: await _headers(),
-      body: jsonEncode({'amount': amount}),
-    );
-    final orderData = jsonDecode(orderRes.body);
+    final orderData = await _post('/payments/add-to-wallet', {'amount': amount});
     if (orderData['success'] != true) {
       return {'success': false, 'message': orderData['message'] ?? 'Failed to create order'};
     }
@@ -99,7 +104,7 @@ class RazorpayCheckout {
     // 2. Open checkout
     final result = await openCheckout(
       order: order,
-      name: 'RYDO Wallet',
+      name: 'Rydo Wallet',
       description: 'Wallet recharge',
       customerName: customerName,
       customerEmail: customerEmail,
@@ -111,17 +116,12 @@ class RazorpayCheckout {
     }
 
     // 3. Verify wallet payment
-    final verifyRes = await http.post(
-      Uri.parse('${ApiConfig.baseUrl}/payments/verify-wallet-payment'),
-      headers: await _headers(),
-      body: jsonEncode({
-        'razorpay_payment_id': result.paymentId,
-        'razorpay_order_id': result.orderId,
-        'razorpay_signature': result.signature,
-        'amount': amount,
-      }),
-    );
-    final verifyData = jsonDecode(verifyRes.body);
+    final verifyData = await _post('/payments/verify-wallet-payment', {
+      'razorpay_payment_id': result.paymentId,
+      'razorpay_order_id': result.orderId,
+      'razorpay_signature': result.signature,
+      'amount': amount,
+    });
     return {
       'success': verifyData['success'] == true,
       'message': verifyData['message'] ?? (verifyData['success'] == true ? 'Wallet recharged' : 'Verification failed'),

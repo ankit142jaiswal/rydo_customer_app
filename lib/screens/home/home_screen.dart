@@ -1,3 +1,5 @@
+import '../../widgets/rydo_back_button.dart';
+import '../../utils/currency.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'dart:async';
@@ -6,7 +8,9 @@ import '../../providers/notification_provider.dart';
 import '../../services/api_service.dart';
 import '../../services/socket_service.dart';
 import '../../utils/app_colors.dart';
+import '../../utils/service_catalog.dart';
 import '../book_ride_screen.dart';
+import '../ride_tracking_screen.dart';
 import '../rides_screen.dart';
 import '../wallet_screen.dart';
 import '../customer_profile_screen.dart';
@@ -23,42 +27,6 @@ class _HomeScreenState extends State<HomeScreen> {
   Map<String, dynamic>? _dashboard;
   bool _loading = true;
   StreamSubscription<Map<String, dynamic>>? _rideSub;
-
-  // ── Service definitions ──────────────────────────────────────────────────
-  static const List<Map<String, dynamic>> _services = [
-    {
-      'title': 'Bike Taxi',
-      'subtitle': 'Quick short rides',
-      'icon': Icons.motorcycle,
-      'color': AppColors.bikeTaxi,
-      'price': 'From ₹25',
-      'serviceType': 'bike-taxi',
-    },
-    {
-      'title': 'Courier',
-      'subtitle': 'Send packages fast',
-      'icon': Icons.local_shipping,
-      'color': AppColors.courier,
-      'price': 'From ₹20',
-      'serviceType': 'courier',
-    },
-    {
-      'title': 'Auto',
-      'subtitle': 'Comfortable rides',
-      'icon': Icons.directions_car,
-      'color': AppColors.auto,
-      'price': 'From ₹40',
-      'serviceType': 'auto',
-    },
-    {
-      'title': 'Mini Truck',
-      'subtitle': 'Goods transport',
-      'icon': Icons.local_shipping_outlined,
-      'color': AppColors.miniTruck,
-      'price': 'From ₹100',
-      'serviceType': 'mini-truck',
-    },
-  ];
 
   @override
   void initState() {
@@ -86,15 +54,26 @@ class _HomeScreenState extends State<HomeScreen> {
   void _onRideUpdate(Map<String, dynamic> data) {
     if (!mounted) return;
     final event = data['_event']?.toString() ?? '';
+    // Location pings are handled by the tracking screen; don't touch the badge.
+    if (event == 'driver_location' || event == 'driver_location_update') return;
+    _loadDashboard(silent: true); // keep the active-ride banner in sync
     // Refresh notifications badge
     Provider.of<NotificationProvider>(context, listen: false)
         .incrementUnread();
 
+    final statusMsg = {
+      'arrived': '📍 Your captain has arrived at pickup.',
+      'started': '🛣️ Your ride has started!',
+      'completed': '✅ Your ride is complete.',
+      'cancelled': '❌ Your ride was cancelled.',
+    };
     final messages = {
       'ride_accepted': '🚗 A captain has accepted your ride!',
       'ride_started': '🛣️ Your ride has started!',
       'ride_completed': '✅ Your ride is complete.',
       'ride_cancelled': '❌ Your ride was cancelled.',
+      if (event == 'ride_status_update' && statusMsg[data['status']] != null)
+        'ride_status_update': statusMsg[data['status']]!,
     };
     final msg = messages[event];
     if (msg != null) {
@@ -126,8 +105,8 @@ class _HomeScreenState extends State<HomeScreen> {
     super.dispose();
   }
 
-  Future<void> _loadDashboard() async {
-    setState(() => _loading = true);
+  Future<void> _loadDashboard({bool silent = false}) async {
+    if (!silent) setState(() => _loading = true);
     final result = await ApiService.getDashboard();
     if (mounted) {
       setState(() {
@@ -151,21 +130,29 @@ class _HomeScreenState extends State<HomeScreen> {
         _HomePage(
           loading: _loading,
           dashboard: _dashboard,
-          services: _services,
           onRefresh: _loadDashboard,
           onServiceTap: _openBookRide,
           onBookTap: () => _openBookRide(),
+          onTabTap: (i) => setState(() => _currentIndex = i),
         ),
         const RidesScreen(),
         const WalletScreen(),
         const CustomerProfileScreen(),
       ];
 
+  void _goHomeTab() => setState(() => _currentIndex = 0);
+
   @override
   Widget build(BuildContext context) {
     final tabTitles = ['Home', 'Rides', 'Wallet', 'Profile'];
 
-    return Scaffold(
+    return PopScope(
+      // System back on Rides/Wallet/Profile tabs returns to the Home tab
+      canPop: _currentIndex == 0,
+      onPopInvokedWithResult: (didPop, _) {
+        if (!didPop && _currentIndex != 0) setState(() => _currentIndex = 0);
+      },
+      child: Scaffold(
       backgroundColor: AppColors.background,
       // ── Side navigation drawer ─────────────────────────────────────────
       drawer: _buildDrawer(context),
@@ -173,9 +160,15 @@ class _HomeScreenState extends State<HomeScreen> {
         backgroundColor: AppColors.dark,
         elevation: 0,
         scrolledUnderElevation: 0,
-        // Logo fills the full leading area and opens the drawer on tap
+        // Home tab: logo opens the drawer. Other tabs: back arrow to Home.
         automaticallyImplyLeading: false,
-        leading: Builder(
+        leading: _currentIndex != 0
+            ? IconButton(
+                icon: const Icon(Icons.arrow_back_rounded, color: Colors.white),
+                tooltip: 'Back',
+                onPressed: () => setState(() => _currentIndex = 0),
+              )
+            : Builder(
           builder: (ctx) => InkWell(
             onTap: () => Scaffold.of(ctx).openDrawer(),
             child: Padding(
@@ -249,9 +242,12 @@ class _HomeScreenState extends State<HomeScreen> {
         ],
       ),
 
-      body: IndexedStack(
-        index: _currentIndex,
-        children: _pages,
+      body: HomeTabScope(
+        goHome: _goHomeTab,
+        child: IndexedStack(
+          index: _currentIndex,
+          children: _pages,
+        ),
       ),
 
       bottomNavigationBar: BottomNavigationBar(
@@ -304,6 +300,7 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
             )
           : null,
+      ),
     );
   }
 
@@ -359,40 +356,6 @@ class _HomeScreenState extends State<HomeScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Logo + avatar row
-                    Row(
-                      children: [
-                        Container(
-                          width: 44,
-                          height: 44,
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: Padding(
-                            padding: const EdgeInsets.all(6),
-                            child: ClipRRect(
-                              borderRadius: BorderRadius.circular(10),
-                              child: Image.asset(
-                                'assets/images/rydo_icon.png',
-                                fit: BoxFit.cover,
-                              ),
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: 10),
-                        const Text(
-                          'Rydo',
-                          style: TextStyle(
-                            color: AppColors.primary,
-                            fontSize: 22,
-                            fontWeight: FontWeight.w900,
-                            letterSpacing: 1,
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 20),
                     // User avatar
                     CircleAvatar(
                       radius: 30,
@@ -553,15 +516,15 @@ class _HomePage extends StatelessWidget {
   const _HomePage({
     required this.loading,
     required this.dashboard,
-    required this.services,
     required this.onRefresh,
     required this.onServiceTap,
     required this.onBookTap,
+    required this.onTabTap,
   });
 
+  final void Function(int index) onTabTap;
   final bool loading;
   final Map<String, dynamic>? dashboard;
-  final List<Map<String, dynamic>> services;
   final Future<void> Function() onRefresh;
   final void Function(String serviceType) onServiceTap;
   final VoidCallback onBookTap;
@@ -588,24 +551,101 @@ class _HomePage extends StatelessWidget {
             padding: EdgeInsets.symmetric(horizontal: hPad, vertical: 16),
             children: [
               _HeroBanner(dashboard: dashboard),
+              if (dashboard?['activeRide'] is Map) ...[
+                const SizedBox(height: 12),
+                _ActiveRideBanner(
+                  ride: Map<String, dynamic>.from(dashboard!['activeRide']),
+                  onClosed: onRefresh,
+                ),
+              ],
               const SizedBox(height: 16),
-              _StatsRow(dashboard: dashboard),
-              const SizedBox(height: 20),
-              _SectionHeader(
-                title: 'Our Services',
-                subtitle: 'Tap a service to book',
-              ),
-              const SizedBox(height: 12),
-              _ServiceGrid(
-                services: services,
-                columns: cols,
-                onTap: onServiceTap,
-              ),
+              _StatsRow(dashboard: dashboard, onTabTap: onTabTap),
+              for (final cat in ServiceCatalog.categories) ...[
+                const SizedBox(height: 20),
+                _SectionHeader(title: cat.title, subtitle: cat.subtitle),
+                const SizedBox(height: 12),
+                _ServiceGrid(
+                  services: [
+                    for (final s in cat.services)
+                      {
+                        'title': s.title,
+                        'subtitle': s.subtitle,
+                        'icon': s.icon,
+                        'color': s.color,
+                        'price': s.price,
+                        'serviceType': s.type,
+                      }
+                  ],
+                  columns: cols,
+                  onTap: onServiceTap,
+                ),
+              ],
               // Extra space above FAB
               const SizedBox(height: 80),
             ],
           );
         },
+      ),
+    );
+  }
+}
+
+// ── Active ride banner ───────────────────────────────────────────────────────
+class _ActiveRideBanner extends StatelessWidget {
+  const _ActiveRideBanner({required this.ride, required this.onClosed});
+
+  final Map<String, dynamic> ride;
+  final Future<void> Function() onClosed;
+
+  @override
+  Widget build(BuildContext context) {
+    final status = ride['status']?.toString() ?? 'requested';
+    final label = {
+          'requested': 'Finding your captain…',
+          'accepted': 'Captain is on the way',
+          'arrived': 'Captain has arrived',
+          'started': 'Trip in progress',
+        }[status] ??
+        'Ride in progress';
+    final dest = ride['destination']?['address']?.toString() ?? '';
+    return Material(
+      color: AppColors.primary,
+      borderRadius: BorderRadius.circular(16),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(16),
+        onTap: () async {
+          await Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) => RideTrackingScreen(rideId: ride['rideId'].toString(), initialRide: ride),
+            ),
+          );
+          onClosed();
+        },
+        child: Padding(
+          padding: const EdgeInsets.all(14),
+          child: Row(
+            children: [
+              const Icon(Icons.directions_bike_rounded, color: AppColors.onPrimary),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(label, style: const TextStyle(fontWeight: FontWeight.w800, color: AppColors.onPrimary)),
+                    if (dest.isNotEmpty)
+                      Text('To $dest',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(fontSize: 12, color: AppColors.onPrimary)),
+                  ],
+                ),
+              ),
+              const Text('Track', style: TextStyle(fontWeight: FontWeight.w700, color: AppColors.onPrimary)),
+              const Icon(Icons.chevron_right_rounded, color: AppColors.onPrimary),
+            ],
+          ),
+        ),
       ),
     );
   }
@@ -714,8 +754,9 @@ class _HeroBanner extends StatelessWidget {
 
 // ── Stats row ─────────────────────────────────────────────────────────────────
 class _StatsRow extends StatelessWidget {
-  const _StatsRow({required this.dashboard});
+  const _StatsRow({required this.dashboard, required this.onTabTap});
 
+  final void Function(int index) onTabTap;
   final Map<String, dynamic>? dashboard;
 
   @override
@@ -731,13 +772,15 @@ class _StatsRow extends StatelessWidget {
           value: '${total['rides'] ?? 0}',
           icon: Icons.directions_car,
           iconColor: AppColors.bikeTaxi,
+          onTap: () => onTabTap(1),
         ),
         const SizedBox(width: 10),
         _StatCard(
           label: 'This Month',
-          value: '₹${month['spending'] ?? 0}',
+          value: formatRupees(month['spending']),
           icon: Icons.calendar_today,
           iconColor: AppColors.auto,
+          onTap: () => onTabTap(1),
         ),
         const SizedBox(width: 10),
         _StatCard(
@@ -745,6 +788,7 @@ class _StatsRow extends StatelessWidget {
           value: '₹$wallet',
           icon: Icons.account_balance_wallet,
           iconColor: AppColors.success,
+          onTap: () => onTabTap(2),
         ),
       ],
     );
@@ -757,8 +801,10 @@ class _StatCard extends StatelessWidget {
     required this.value,
     required this.icon,
     required this.iconColor,
+    required this.onTap,
   });
 
+  final VoidCallback onTap;
   final String label;
   final String value;
   final IconData icon;
@@ -767,7 +813,12 @@ class _StatCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Expanded(
-      child: Container(
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(16),
+          child: Container(
         padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
           color: Colors.white,
@@ -811,6 +862,8 @@ class _StatCard extends StatelessWidget {
               ),
             ),
           ],
+        ),
+          ),
         ),
       ),
     );

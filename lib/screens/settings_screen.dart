@@ -1,3 +1,4 @@
+import '../widgets/rydo_back_button.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/auth_provider.dart';
@@ -82,7 +83,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: AppBar(title: const Text('Settings')),
+      appBar: AppBar(leading: const RydoBackButton(), title: const Text('Settings')),
       body: _loading
           ? const Center(child: CircularProgressIndicator())
           : ListView(

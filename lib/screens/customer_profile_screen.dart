@@ -1,3 +1,4 @@
+import '../widgets/rydo_back_button.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../providers/auth_provider.dart';
@@ -64,7 +65,7 @@ class _CustomerProfileScreenState extends State<CustomerProfileScreen>
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: AppBar(title: const Text('My Profile')),
+      appBar: AppBar(leading: const RydoBackButton(), title: const Text('My Profile')),
       body: _loading
           ? const Center(child: CircularProgressIndicator())
           : Column(
@@ -161,14 +162,31 @@ class _CustomerProfileScreenState extends State<CustomerProfileScreen>
                   ],
                 ),
                 const SizedBox(height: 6),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
-                  decoration: BoxDecoration(
-                    color: AppColors.success.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: const Text('Active',
-                      style: TextStyle(color: AppColors.success, fontSize: 12, fontWeight: FontWeight.w600)),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 6,
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
+                      decoration: BoxDecoration(
+                        color: AppColors.success.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: const Text('Active',
+                          style: TextStyle(color: AppColors.success, fontSize: 12, fontWeight: FontWeight.w600)),
+                    ),
+                    if ((details['rideOtp'] ?? user['rideOtp']) != null)
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
+                        decoration: BoxDecoration(
+                          color: AppColors.dark,
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Text('Ride OTP: ${details['rideOtp'] ?? user['rideOtp']}',
+                            style: const TextStyle(
+                                color: AppColors.primary, fontSize: 12, fontWeight: FontWeight.w800, letterSpacing: 1)),
+                      ),
+                  ],
                 ),
               ],
             ),
@@ -268,7 +286,7 @@ class _CustomerProfileScreenState extends State<CustomerProfileScreen>
   Widget _paymentTab() {
     final user = _profile ?? {};
     final methods = [
-      {'type': 'RYDO Wallet', 'details': '₹${user['wallet'] ?? 0}', 'default': true, 'icon': Icons.account_balance_wallet},
+      {'type': 'Rydo Wallet', 'details': '₹${user['wallet'] ?? 0}', 'default': true, 'icon': Icons.account_balance_wallet},
       {'type': 'Cash', 'details': 'Pay after ride', 'default': false, 'icon': Icons.money},
       {'type': 'UPI / Online', 'details': 'Razorpay', 'default': false, 'icon': Icons.qr_code},
     ];

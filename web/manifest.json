@@ -1,6 +1,6 @@
 {
-    "name": "rydo_customer",
-    "short_name": "rydo_customer",
+    "name": "Rydo",
+    "short_name": "Rydo",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",

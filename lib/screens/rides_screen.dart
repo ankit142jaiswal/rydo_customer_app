@@ -1,3 +1,5 @@
+import '../widgets/rydo_back_button.dart';
+import '../utils/currency.dart';
 import 'package:flutter/material.dart';
 import '../services/api_service.dart';
 import '../utils/app_colors.dart';
@@ -56,11 +58,8 @@ class _RidesScreenState extends State<RidesScreen> {
       elevation: 0,
       scrolledUnderElevation: 0,
       automaticallyImplyLeading: false,
-      leading: Padding(
-        padding: const EdgeInsets.all(8),
-        child: ClipRRect(borderRadius: BorderRadius.circular(10), child: Image.asset('assets/images/rydo_icon.png', fit: BoxFit.cover)),
-      ),
-      title: null,
+      leading: const RydoBackButton(),
+      title: const Text('My Rides'),
     );
   }
 
@@ -199,7 +198,7 @@ class _RideCard extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
-                  '₹${ride['fare']?['total'] ?? 0}',
+                  formatRupees(ride['fare']?['total']),
                   style: const TextStyle(
                     fontSize: 17,
                     fontWeight: FontWeight.w800,

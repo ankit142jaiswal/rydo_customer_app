@@ -1,3 +1,5 @@
+import '../widgets/rydo_back_button.dart';
+import '../utils/currency.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/auth_provider.dart';
@@ -113,25 +115,7 @@ class _WalletScreenState extends State<WalletScreen> {
       foregroundColor: Colors.white,
       elevation: 0,
       scrolledUnderElevation: 0,
-      leading: Padding(
-        padding: const EdgeInsets.all(8),
-        child: Container(
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(10),
-          ),
-          child: Padding(
-            padding: const EdgeInsets.all(10),
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(10),
-              child: Image.asset(
-                'assets/images/rydo_icon.png',
-                fit: BoxFit.cover,
-              ),
-            ),
-          ),
-        ),
-      ),
+      leading: const RydoBackButton(),
       title: const Text(
         'My Wallet',
         style: TextStyle(
@@ -308,7 +292,7 @@ class _WalletScreenState extends State<WalletScreen> {
                             ),
                           ),
                           trailing: Text(
-                            '${isCredit ? '+' : '-'}₹${t['amount'] ?? 0}',
+                            '${isCredit ? '+' : '-'}${formatRupees(t['amount'])}',
                             style: TextStyle(
                               fontWeight: FontWeight.w800,
                               fontSize: 15,

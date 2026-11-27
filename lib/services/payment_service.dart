@@ -97,8 +97,8 @@ class PaymentService {
       'key': orderData['key'],
       'amount': orderData['amount'],
       'currency': orderData['currency'],
-      'name': 'RYDO',
-      'description': description ?? 'Payment for RYDO service',
+      'name': 'Rydo',
+      'description': description ?? 'Payment for Rydo service',
       'order_id': orderData['id'],
       'prefill': {
         'contact': customerPhone,

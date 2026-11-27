@@ -86,25 +86,11 @@ class _LoginScreenState extends State<LoginScreen> {
                       children: [
                         SizedBox(height: sh * 0.045),
 
-                        // ── Logo ───────────────────────────────────────────
-                        Container(
-                          width: logoSize,
-                          height: logoSize,
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(logoSize * 0.22),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withOpacity(0.25),
-                                blurRadius: 24,
-                                offset: const Offset(0, 8),
-                              ),
-                            ],
-                          ),
-                          child: Padding(
-                            padding: const EdgeInsets.all(10),
-                            child: ClipRRect(borderRadius: BorderRadius.circular(10), child: Image.asset('assets/images/rydo_icon.png', fit: BoxFit.cover)),
-                          ),
+                        // ── Logo (app icon only) ───────────────────────────
+                        ClipRRect(
+                          borderRadius: BorderRadius.circular(logoSize * 0.22),
+                          child: Image.asset('assets/images/rydo_icon.png',
+                              width: logoSize, height: logoSize, fit: BoxFit.cover),
                         ),
 
                         SizedBox(height: sh * 0.025),
